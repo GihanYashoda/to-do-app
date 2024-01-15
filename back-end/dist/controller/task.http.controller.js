@@ -22,8 +22,14 @@ async function getAllTasks(req, res) {
     res.json(taskList);
     pool.releaseConnection(connection);
 }
-function saveTask(req, res) {
-    res.send("<h1>Task Controller: Post</h1>");
+async function saveTask(req, res) {
+    const task = req.body;
+    const connection = await pool.getConnection();
+    const [{ insertId }] = await connection.execute('INSERT INTO task (description, status, email) VALUES (?, false, ?)', [task.description, task.email]);
+    pool.releaseConnection(connection);
+    task.id = insertId;
+    task.status = false;
+    res.status(201).json(task);
 }
 function updateTask(req, res) {
     res.send("<h1>Task Controller: Patch</h1>");

@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {Request, Response} from "express-serve-static-core";
-import mysql from 'mysql2/promise';
+import mysql, {ResultSetHeader} from 'mysql2/promise';
+import {TaskTO} from "../to/task.to.js";
 
 const controller = Router();
 
@@ -26,8 +27,14 @@ async function getAllTasks(req: Request, res: Response){
     res.json(taskList);
     pool.releaseConnection(connection);
 }
-function saveTask(req: Request, res: Response){
-    res.send("<h1>Task Controller: Post</h1>");
+async function saveTask(req: Request, res: Response){
+    const task = <TaskTO>req.body;
+    const connection = await pool.getConnection();
+    const [{insertId}] = await connection.execute<ResultSetHeader>('INSERT INTO task (description, status, email) VALUES (?, false, ?)', [task.description, task.email]);
+    pool.releaseConnection(connection);
+    task.id = insertId;
+    task.status = false;
+    res.status(201).json(task);
 }
 function updateTask(req: Request, res: Response){
     res.send("<h1>Task Controller: Patch</h1>");
