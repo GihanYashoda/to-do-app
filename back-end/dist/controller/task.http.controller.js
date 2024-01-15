@@ -31,10 +31,21 @@ async function saveTask(req, res) {
     task.status = false;
     res.status(201).json(task);
 }
-function updateTask(req, res) {
-    res.send("<h1>Task Controller: Patch</h1>");
+async function updateTask(req, res) {
+    const taskId = req.params.id;
+    const task = req.body;
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute('SELECT * FROM task WHERE id = ?', [taskId]);
+    if (!result.length) {
+        res.status(404);
+        return;
+    }
+    else {
+        await connection.execute('UPDATE task SET description = ?, status = ? WHERE id=?', [task.description, task.status, taskId]);
+        res.sendStatus(204);
+    }
+    pool.releaseConnection(connection);
 }
 function deleteTask(req, res) {
-    res.send("<h1>Task Controller: Delete</h1>");
 }
 //# sourceMappingURL=task.http.controller.js.map

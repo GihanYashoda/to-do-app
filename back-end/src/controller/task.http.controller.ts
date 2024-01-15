@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import {Request, Response} from "express-serve-static-core";
-import mysql, {ResultSetHeader} from 'mysql2/promise';
+import mysql, {ResultSetHeader, RowDataPacket} from 'mysql2/promise';
 import {TaskTO} from "../to/task.to.js";
 
 const controller = Router();
@@ -36,10 +36,22 @@ async function saveTask(req: Request, res: Response){
     task.status = false;
     res.status(201).json(task);
 }
-function updateTask(req: Request, res: Response){
-    res.send("<h1>Task Controller: Patch</h1>");
+async function updateTask(req: Request, res: Response){
+    const taskId = req.params.id;
+    const task = <TaskTO>req.body;
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute<RowDataPacket[]>('SELECT * FROM task WHERE id = ?', [taskId]);
+    if (!result.length) {
+        res.status(404);
+        return;
+    }else {
+        await connection.execute('UPDATE task SET description = ?, status = ? WHERE id=?', [task.description, task.status, taskId]);
+        res.sendStatus(204);
+    }
+    pool.releaseConnection(connection);
+
 }
 function deleteTask(req: Request, res: Response){
-    res.send("<h1>Task Controller: Delete</h1>");
+    
 }
 
