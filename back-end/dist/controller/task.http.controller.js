@@ -46,6 +46,18 @@ async function updateTask(req, res) {
     }
     pool.releaseConnection(connection);
 }
-function deleteTask(req, res) {
+async function deleteTask(req, res) {
+    const taskId = +req.params.id;
+    const connection = await pool.getConnection();
+    const [result] = await connection.execute('SELECT * FROM task WHERE id = ?', [taskId]);
+    if (!result.length) {
+        res.status(404);
+        return;
+    }
+    else {
+        await connection.execute('DELETE FROM task WHERE id =?', [taskId]);
+        res.sendStatus(204);
+    }
+    pool.releaseConnection(connection);
 }
 //# sourceMappingURL=task.http.controller.js.map
